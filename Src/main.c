@@ -56,23 +56,24 @@ static void MX_USART2_UART_Init(void);
 void StartDefaultTask(void const * argument);
 
 /* USER CODE BEGIN PFP */
+void Toggle_LED2(){
+	HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
+}
+
 void RTOS_Task1(){
-	char data[] = "Task 1\r\n";
 	
 	while(1){
-		//HAL_UART_Transmit(&huart2, (uint8_t*)data, sizeof(data), 10);
-		//HAL_Delay(899);
-		osDelay(49);
+		Toggle_LED2();
+		osDelay(499);
 	}
 }
 
 void RTOS_Task2(){
 	while(1){
-		char data[] = "Task 2\r\n";
 		
 		while(1){
-			//HAL_UART_Transmit(&huart2, (uint8_t*)data, sizeof(data), 10);
-			//HAL_Delay(499);
+//			HAL_UART_Transmit(&huart2, (uint8_t*)data, sizeof(data), 10);
+//			HAL_Delay(499);
 			osDelay(79);
 		}
 	}
@@ -98,6 +99,11 @@ void Uart_Task(){
 			Buffer[index++] = '\r'; 			
 			Buffer[index++] = '\n'; 
 			HAL_UART_Transmit(&huart2, (uint8_t*)Buffer, index, 10);
+			
+//			if(strncmp(Buffer, "LD2", 3)){
+//				Toggle_LED2();
+//			}
+			
 			index = 0;
 			goto Rx_Fin;
 		}
@@ -172,9 +178,9 @@ int main(void)
   defaultTaskHandle = osThreadCreate(osThread(defaultTask), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
-	xTaskCreate(RTOS_Task1, "Task 1", configMINIMAL_STACK_SIZE, NULL, 1, NULL);
-	xTaskCreate(RTOS_Task2, "Task 2", configMINIMAL_STACK_SIZE, NULL, 1, NULL);
-	xTaskCreate(Uart_Task, "Uart_Task", configMINIMAL_STACK_SIZE, NULL, 1, NULL);
+	xTaskCreate((TaskFunction_t)RTOS_Task1, "Task 1", configMINIMAL_STACK_SIZE, NULL, 1, NULL);
+	xTaskCreate((TaskFunction_t)RTOS_Task2, "Task 2", configMINIMAL_STACK_SIZE, NULL, 1, NULL);
+	xTaskCreate((TaskFunction_t)Uart_Task, "Uart_Task", configMINIMAL_STACK_SIZE, NULL, 1, NULL);
 	
   /* add threads, ... */
   /* USER CODE END RTOS_THREADS */
