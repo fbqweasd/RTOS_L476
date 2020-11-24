@@ -21,6 +21,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "cmsis_os.h"
+#include <string.h>
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -63,7 +64,7 @@ void Toggle_LED2(){
 void RTOS_Task1(){
 	
 	while(1){
-		Toggle_LED2();
+		//Toggle_LED2();
 		osDelay(499);
 	}
 }
@@ -100,9 +101,9 @@ void Uart_Task(){
 			Buffer[index++] = '\n'; 
 			HAL_UART_Transmit(&huart2, (uint8_t*)Buffer, index, 10);
 			
-//			if(strncmp(Buffer, "LD2", 3)){
-//				Toggle_LED2();
-//			}
+			if(!strncmp(Buffer, "LD2", 3)){
+				Toggle_LED2();
+			}
 			
 			index = 0;
 			goto Rx_Fin;
