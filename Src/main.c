@@ -60,8 +60,9 @@ void RTOS_Task1(){
 	char data[] = "Task 1\r\n";
 	
 	while(1){
-		HAL_UART_Transmit(&huart2, (uint8_t*)data, sizeof(data), 10);
-		HAL_Delay(899);
+		//HAL_UART_Transmit(&huart2, (uint8_t*)data, sizeof(data), 10);
+		//HAL_Delay(899);
+		osDelay(49);
 	}
 }
 
@@ -70,9 +71,44 @@ void RTOS_Task2(){
 		char data[] = "Task 2\r\n";
 		
 		while(1){
-			HAL_UART_Transmit(&huart2, (uint8_t*)data, sizeof(data), 10);
-			HAL_Delay(499);
+			//HAL_UART_Transmit(&huart2, (uint8_t*)data, sizeof(data), 10);
+			//HAL_Delay(499);
+			osDelay(79);
 		}
+	}
+}
+
+void Uart_Task(){
+	
+	char RxBuffer;
+	char Buffer[128];
+	int index = 0;
+	
+	while(1){
+		HAL_UART_Receive(&huart2, (uint8_t*)&RxBuffer, 1, 10);
+		HAL_UART_Transmit(&huart2, (uint8_t*)&RxBuffer, 1, 10);
+
+		if(index >= 127){
+			goto show_text;
+		}
+		
+		if(RxBuffer == '\r' || RxBuffer == '\n'){
+			show_text:
+
+			Buffer[index++] = '\r'; 			
+			Buffer[index++] = '\n'; 
+			HAL_UART_Transmit(&huart2, (uint8_t*)Buffer, index, 10);
+			index = 0;
+			goto Rx_Fin;
+		}
+
+		if(RxBuffer != NULL){
+			Buffer[index++] = RxBuffer;
+		}
+			
+		Rx_Fin:
+		RxBuffer = NULL;
+		osDelay(1);
 	}
 }
 /* USER CODE END PFP */
@@ -112,7 +148,6 @@ int main(void)
   MX_GPIO_Init();
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
-	uint8_t TextData[] = "text";
   /* USER CODE END 2 */
 
   /* USER CODE BEGIN RTOS_MUTEX */
@@ -139,6 +174,8 @@ int main(void)
   /* USER CODE BEGIN RTOS_THREADS */
 	xTaskCreate(RTOS_Task1, "Task 1", configMINIMAL_STACK_SIZE, NULL, 1, NULL);
 	xTaskCreate(RTOS_Task2, "Task 2", configMINIMAL_STACK_SIZE, NULL, 1, NULL);
+	xTaskCreate(Uart_Task, "Uart_Task", configMINIMAL_STACK_SIZE, NULL, 1, NULL);
+	
   /* add threads, ... */
   /* USER CODE END RTOS_THREADS */
 

@@ -28,17 +28,21 @@ Project File Date:  11/23/2020
 *** Using Compiler 'V5.06 update 6 (build 750)', folder: 'D:\Keil_v5\ARM\ARMCC\Bin'
 Build target 'RTOS_L476'
 compiling main.c...
-../Src/main.c(140): warning:  #167-D: argument of type "void (*)()" is incompatible with parameter of type "TaskFunction_t"
+../Src/main.c(60): warning:  #177-D: variable "data"  was declared but never referenced
+  	char data[] = "Task 1\r\n";
+../Src/main.c(71): warning:  #177-D: variable "data"  was declared but never referenced
+  		char data[] = "Task 2\r\n";
+../Src/main.c(175): warning:  #167-D: argument of type "void (*)()" is incompatible with parameter of type "TaskFunction_t"
   	xTaskCreate(RTOS_Task1, "Task 1", configMINIMAL_STACK_SIZE, NULL, 1, NULL);
-../Src/main.c(141): warning:  #167-D: argument of type "void (*)()" is incompatible with parameter of type "TaskFunction_t"
+../Src/main.c(176): warning:  #167-D: argument of type "void (*)()" is incompatible with parameter of type "TaskFunction_t"
   	xTaskCreate(RTOS_Task2, "Task 2", configMINIMAL_STACK_SIZE, NULL, 1, NULL);
-../Src/main.c(115): warning:  #177-D: variable "TextData"  was declared but never referenced
-  	uint8_t TextData[] = "text";
-../Src/main.c: 3 warnings, 0 errors
+../Src/main.c(177): warning:  #167-D: argument of type "void (*)()" is incompatible with parameter of type "TaskFunction_t"
+  	xTaskCreate(Uart_Task, "Uart_Task", configMINIMAL_STACK_SIZE, NULL, 1, NULL);
+../Src/main.c: 5 warnings, 0 errors
 linking...
-Program Size: Code=10960 RO-data=536 RW-data=116 ZI-data=5052  
+Program Size: Code=11212 RO-data=536 RW-data=116 ZI-data=5052  
 FromELF: creating hex file...
-"RTOS_L476\RTOS_L476.axf" - 0 Error(s), 3 Warning(s).
+"RTOS_L476\RTOS_L476.axf" - 0 Error(s), 5 Warning(s).
 
 <h2>Software Packages used:</h2>
 
@@ -61,7 +65,7 @@ Package Vendor: Keil
 <h2>Collection of Component Files used:</h2>
 
    * Component: ARM::CMSIS:CORE:5.4.0
-Build Time Elapsed:  00:00:03
+Build Time Elapsed:  00:00:02
 </pre>
 </body>
 </html>
