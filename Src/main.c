@@ -21,12 +21,12 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "cmsis_os.h"
-#include <string.h>
-
-#include "lg_airconditioner.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+
+#include <string.h>
+#include "lg_airconditioner.h"
 
 /* USER CODE END Includes */
 
@@ -45,6 +45,8 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
+TIM_HandleTypeDef htim6;
+
 UART_HandleTypeDef huart2;
 
 osThreadId defaultTaskHandle;
@@ -55,6 +57,7 @@ osThreadId defaultTaskHandle;
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
+static void MX_TIM6_Init(void);
 static void MX_USART2_UART_Init(void);
 void StartDefaultTask(void const * argument);
 
@@ -63,12 +66,15 @@ void StartDefaultTask(void const * argument);
 // Task Function
 void Toggle_LED2(void);
 void RTOS_Task1(void);
-void RTOS_Task2(void);
+void Wave_Task(void);
 void Uart_Task(void);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+int Timer_count_6;
+LG_AIRCON AirData[2];
+int AirFlag = -1;
 /* USER CODE END 0 */
 
 /**
@@ -78,8 +84,6 @@ void Uart_Task(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-	int sizeof_lg;
-	LG_AIRCON lg_airpack;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -95,12 +99,14 @@ int main(void)
   SystemClock_Config();
 
   /* USER CODE BEGIN SysInit */
-
+	AirData_init(AirData);
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_TIM6_Init();
   MX_USART2_UART_Init();
+	HAL_TIM_Base_Start_IT(&htim6);
   /* USER CODE BEGIN 2 */
   /* USER CODE END 2 */
 
@@ -127,7 +133,7 @@ int main(void)
 
   /* USER CODE BEGIN RTOS_THREADS */
 	xTaskCreate((TaskFunction_t)RTOS_Task1, "Task 1", configMINIMAL_STACK_SIZE, NULL, 1, NULL);
-	xTaskCreate((TaskFunction_t)RTOS_Task2, "Task 2", configMINIMAL_STACK_SIZE, NULL, 1, NULL);
+	xTaskCreate((TaskFunction_t)Wave_Task, "Task 2", configMINIMAL_STACK_SIZE, NULL, 1, NULL);
 	xTaskCreate((TaskFunction_t)Uart_Task, "Uart_Task", configMINIMAL_STACK_SIZE, NULL, 1, NULL);
 		
   /* add threads, ... */
@@ -202,6 +208,44 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
+}
+
+/**
+  * @brief TIM6 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM6_Init(void)
+{
+
+  /* USER CODE BEGIN TIM6_Init 0 */
+
+  /* USER CODE END TIM6_Init 0 */
+
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+  /* USER CODE BEGIN TIM6_Init 1 */
+
+  /* USER CODE END TIM6_Init 1 */
+  htim6.Instance = TIM6;
+  htim6.Init.Prescaler = 32;
+  htim6.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim6.Init.Period = 25;
+  htim6.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim6) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim6, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM6_Init 2 */
+
+  /* USER CODE END TIM6_Init 2 */
+
 }
 
 /**
@@ -288,11 +332,48 @@ void RTOS_Task1(void){
 	}
 }
 
-void RTOS_Task2(void){
+void Wave_Task(void){	
+	
+	int i, help_var;
+	
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
 	while(1){
-		
-		while(1){
-			osDelay(79);
+		if(AirFlag != -1){
+			HAL_TIM_Base_Start_IT(&htim6);
+			Timer_count_6 = 0;
+			
+			//Header Pulse
+			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);
+			while(Timer_count_6 < 315);	
+			
+			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
+			while(Timer_count_6 < 1285);
+				
+			help_var = 3;
+			while(i < 28){ // data packet
+				Timer_count_6 = 0;
+				
+				HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);
+				while(Timer_count_6 < 55);	
+				
+				HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
+				if(AirData[AirFlag].all & (1 << (i + help_var))){ // littel -> big Endian
+					while(Timer_count_6 < 210);
+				}
+				else{
+					while(Timer_count_6 < 110);
+				}
+
+				help_var -= 2;
+				if(help_var < -3){
+					help_var =3;
+				}
+				
+				i++;
+			}
+			
+			HAL_TIM_Base_Stop_IT(&htim6);
+			AirFlag = -1;
 		}
 	}
 }
@@ -322,6 +403,14 @@ void Uart_Task(void){
 				Toggle_LED2();
 			}
 			
+			if(!strncmp(Buffer, "AIR_OFF", 7)){
+				AirFlag = 0;
+			}
+			
+			if(!strncmp(Buffer, "AIR_ON", 6)){
+				AirFlag = 1;
+			}
+			
 			index = 0;
 			goto Rx_Fin;
 		}
@@ -336,6 +425,7 @@ void Uart_Task(void){
 		osDelay(1);
 	}
 }
+
 /* USER CODE END 4 */
 
 /* USER CODE BEGIN Header_StartDefaultTask */
@@ -373,7 +463,10 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
     HAL_IncTick();
   }
   /* USER CODE BEGIN Callback 1 */
-
+	if(htim -> Instance == TIM6)
+	 {
+				Timer_count_6++;
+	 }
   /* USER CODE END Callback 1 */
 }
 

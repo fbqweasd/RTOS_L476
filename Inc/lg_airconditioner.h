@@ -16,4 +16,6 @@ typedef union _LG_AIRCON{
 	}bits;
 }LG_AIRCON;
 
+void AirData_init(LG_AIRCON* init_data);
+
 #endif

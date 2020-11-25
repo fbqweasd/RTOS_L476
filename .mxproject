@@ -1,7 +1,7 @@
 [PreviousGenFiles]
-HeaderPath=C:/Users/UKC/Documents/Git/RTOS_L476/RTOS_L476/Inc
+HeaderPath=C:/Users/UKC/Documents/Git/RTOS_L476/Inc
 HeaderFiles=stm32l4xx_it.h;stm32l4xx_hal_conf.h;main.h;FreeRTOSConfig.h;
-SourcePath=C:/Users/UKC/Documents/Git/RTOS_L476/RTOS_L476/Src
+SourcePath=C:/Users/UKC/Documents/Git/RTOS_L476/Src
 SourceFiles=stm32l4xx_it.c;stm32l4xx_hal_msp.c;main.c;freertos.c;stm32l4xx_hal_timebase_tim.c;
 
 [PreviousLibFiles]
