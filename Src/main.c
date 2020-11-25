@@ -78,7 +78,8 @@ void Uart_Task(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-
+	int sizeof_lg;
+	LG_AIRCON lg_airpack;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -128,7 +129,7 @@ int main(void)
 	xTaskCreate((TaskFunction_t)RTOS_Task1, "Task 1", configMINIMAL_STACK_SIZE, NULL, 1, NULL);
 	xTaskCreate((TaskFunction_t)RTOS_Task2, "Task 2", configMINIMAL_STACK_SIZE, NULL, 1, NULL);
 	xTaskCreate((TaskFunction_t)Uart_Task, "Uart_Task", configMINIMAL_STACK_SIZE, NULL, 1, NULL);
-	
+		
   /* add threads, ... */
   /* USER CODE END RTOS_THREADS */
 
@@ -138,20 +139,6 @@ int main(void)
   /* We should never get here as control is now taken by the scheduler */
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-	
-	char temp_data1;
-	
-	LG_AIRCON lg;
-	lg.bits.SYNC = 0x88;
-	lg.bits.EVENT = 0xC;
-	lg.bits.Data1 = 0x0;
-	lg.bits.Data2 = 0x0;
-	lg.bits.Data3 = 0x5;
-	lg.bits.CheckSum = 0x1;
-
-	temp_data1 = sizeof(lg) + '0';
-	HAL_UART_Transmit(&huart2, (uint8_t*)&temp_data1, 1, 10);
-
 	
   while (1)
   {
