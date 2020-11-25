@@ -57,67 +57,13 @@ static void MX_USART2_UART_Init(void);
 void StartDefaultTask(void const * argument);
 
 /* USER CODE BEGIN PFP */
-void Toggle_LED2(){
-	HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
-}
 
-void RTOS_Task1(){
-	
-	while(1){
-		//Toggle_LED2();
-		osDelay(499);
-	}
-}
+// Task Function
+void Toggle_LED2();
+void RTOS_Task1();
+void RTOS_Task2();
+void Uart_Task();
 
-void RTOS_Task2(){
-	while(1){
-		
-		while(1){
-//			HAL_UART_Transmit(&huart2, (uint8_t*)data, sizeof(data), 10);
-//			HAL_Delay(499);
-			osDelay(79);
-		}
-	}
-}
-
-void Uart_Task(){
-	
-	char RxBuffer;
-	char Buffer[128];
-	int index = 0;
-	
-	while(1){
-		HAL_UART_Receive(&huart2, (uint8_t*)&RxBuffer, 1, 10);
-		HAL_UART_Transmit(&huart2, (uint8_t*)&RxBuffer, 1, 10);
-
-		if(index >= 127){
-			goto show_text;
-		}
-		
-		if(RxBuffer == '\r' || RxBuffer == '\n'){
-			show_text:
-
-			Buffer[index++] = '\r'; 			
-			Buffer[index++] = '\n'; 
-			HAL_UART_Transmit(&huart2, (uint8_t*)Buffer, index, 10);
-			
-			if(!strncmp(Buffer, "LD2", 3)){
-				Toggle_LED2();
-			}
-			
-			index = 0;
-			goto Rx_Fin;
-		}
-
-		if(RxBuffer != NULL){
-			Buffer[index++] = RxBuffer;
-		}
-			
-		Rx_Fin:
-		RxBuffer = NULL;
-		osDelay(1);
-	}
-}
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -329,7 +275,64 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+void Toggle_LED2(){
+	HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
+}
 
+void RTOS_Task1(){
+	
+	while(1){
+		osDelay(499);
+	}
+}
+
+void RTOS_Task2(){
+	while(1){
+		
+		while(1){
+			osDelay(79);
+		}
+	}
+}
+
+void Uart_Task(){
+	
+	char RxBuffer;
+	char Buffer[128];
+	int index = 0;
+	
+	while(1){
+		HAL_UART_Receive(&huart2, (uint8_t*)&RxBuffer, 1, 10);
+		HAL_UART_Transmit(&huart2, (uint8_t*)&RxBuffer, 1, 10);
+
+		if(index >= 127){
+			goto show_text;
+		}
+		
+		if(RxBuffer == '\r' || RxBuffer == '\n'){
+			show_text:
+
+			Buffer[index++] = '\r'; 			
+			Buffer[index++] = '\n'; 
+			HAL_UART_Transmit(&huart2, (uint8_t*)Buffer, index, 10);
+			
+			if(!strncmp(Buffer, "LD2", 3)){
+				Toggle_LED2();
+			}
+			
+			index = 0;
+			goto Rx_Fin;
+		}
+
+		if(RxBuffer != NULL){
+			Buffer[index++] = RxBuffer;
+		}
+			
+		Rx_Fin:
+		RxBuffer = NULL;
+		osDelay(1);
+	}
+}
 /* USER CODE END 4 */
 
 /* USER CODE BEGIN Header_StartDefaultTask */
