@@ -23,6 +23,8 @@
 #include "cmsis_os.h"
 #include <string.h>
 
+#include "lg_airconditioner.h"
+
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
@@ -59,16 +61,14 @@ void StartDefaultTask(void const * argument);
 /* USER CODE BEGIN PFP */
 
 // Task Function
-void Toggle_LED2();
-void RTOS_Task1();
-void RTOS_Task2();
-void Uart_Task();
-
+void Toggle_LED2(void);
+void RTOS_Task1(void);
+void RTOS_Task2(void);
+void Uart_Task(void);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
 /* USER CODE END 0 */
 
 /**
@@ -138,6 +138,21 @@ int main(void)
   /* We should never get here as control is now taken by the scheduler */
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+	
+	char temp_data1;
+	
+	LG_AIRCON lg;
+	lg.bits.SYNC = 0x88;
+	lg.bits.EVENT = 0xC;
+	lg.bits.Data1 = 0x0;
+	lg.bits.Data2 = 0x0;
+	lg.bits.Data3 = 0x5;
+	lg.bits.CheckSum = 0x1;
+
+	temp_data1 = sizeof(lg) + '0';
+	HAL_UART_Transmit(&huart2, (uint8_t*)&temp_data1, 1, 10);
+
+	
   while (1)
   {
 		//HAL_UART_Transmit(&huart2, TextData, sizeof(TextData), 10);
@@ -275,18 +290,18 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-void Toggle_LED2(){
+void Toggle_LED2(void){
 	HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
 }
 
-void RTOS_Task1(){
+void RTOS_Task1(void){
 	
 	while(1){
 		osDelay(499);
 	}
 }
 
-void RTOS_Task2(){
+void RTOS_Task2(void){
 	while(1){
 		
 		while(1){
@@ -295,7 +310,7 @@ void RTOS_Task2(){
 	}
 }
 
-void Uart_Task(){
+void Uart_Task(void){
 	
 	char RxBuffer;
 	char Buffer[128];
@@ -303,7 +318,6 @@ void Uart_Task(){
 	
 	while(1){
 		HAL_UART_Receive(&huart2, (uint8_t*)&RxBuffer, 1, 10);
-		HAL_UART_Transmit(&huart2, (uint8_t*)&RxBuffer, 1, 10);
 
 		if(index >= 127){
 			goto show_text;
@@ -312,6 +326,7 @@ void Uart_Task(){
 		if(RxBuffer == '\r' || RxBuffer == '\n'){
 			show_text:
 
+			HAL_UART_Transmit(&huart2, (uint8_t*)"\r\n", 2, 10);
 			Buffer[index++] = '\r'; 			
 			Buffer[index++] = '\n'; 
 			HAL_UART_Transmit(&huart2, (uint8_t*)Buffer, index, 10);
@@ -325,6 +340,7 @@ void Uart_Task(){
 		}
 
 		if(RxBuffer != NULL){
+			HAL_UART_Transmit(&huart2, (uint8_t*)&RxBuffer, 1, 10);
 			Buffer[index++] = RxBuffer;
 		}
 			

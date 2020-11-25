@@ -586,6 +586,16 @@
           </Files>
         </Group>
         <Group>
+          <GroupName>User_Header</GroupName>
+          <Files>
+            <File>
+              <FileName>lg_airconditioner.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Inc\lg_airconditioner.h</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
           <GroupName>::CMSIS</GroupName>
         </Group>
       </Groups>
