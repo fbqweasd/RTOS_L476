@@ -46,6 +46,7 @@
 
 /* Private variables ---------------------------------------------------------*/
 TIM_HandleTypeDef htim6;
+TIM_HandleTypeDef htim7;
 
 UART_HandleTypeDef huart2;
 
@@ -58,6 +59,7 @@ osThreadId defaultTaskHandle;
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_TIM6_Init(void);
+static void MX_TIM7_Init(void);
 static void MX_USART2_UART_Init(void);
 void StartDefaultTask(void const * argument);
 
@@ -68,6 +70,7 @@ void Toggle_LED2(void);
 void RTOS_Task1(void);
 void Wave_Task(void);
 void Uart_Task(void);
+void IR_Pulse(char flag);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -105,8 +108,8 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_TIM6_Init();
+  MX_TIM7_Init();
   MX_USART2_UART_Init();
-	HAL_TIM_Base_Start_IT(&htim6);
   /* USER CODE BEGIN 2 */
   /* USER CODE END 2 */
 
@@ -228,9 +231,9 @@ static void MX_TIM6_Init(void)
 
   /* USER CODE END TIM6_Init 1 */
   htim6.Instance = TIM6;
-  htim6.Init.Prescaler = 32;
+  htim6.Init.Prescaler = 320;
   htim6.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim6.Init.Period = 25;
+  htim6.Init.Period = 24;
   htim6.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim6) != HAL_OK)
   {
@@ -245,6 +248,44 @@ static void MX_TIM6_Init(void)
   /* USER CODE BEGIN TIM6_Init 2 */
 
   /* USER CODE END TIM6_Init 2 */
+
+}
+
+/**
+  * @brief TIM7 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM7_Init(void)
+{
+
+  /* USER CODE BEGIN TIM7_Init 0 */
+
+  /* USER CODE END TIM7_Init 0 */
+
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+  /* USER CODE BEGIN TIM7_Init 1 */
+
+  /* USER CODE END TIM7_Init 1 */
+  htim7.Instance = TIM7;
+  htim7.Init.Prescaler = 100;
+  htim7.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim7.Init.Period = 0;
+  htim7.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim7) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim7, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM7_Init 2 */
+
+  /* USER CODE END TIM7_Init 2 */
 
 }
 
@@ -343,25 +384,27 @@ void Wave_Task(void){
 			Timer_count_6 = 0;
 			
 			//Header Pulse
-			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);
-			while(Timer_count_6 < 315);	
+			IR_Pulse(1);
+			while(Timer_count_6 < 800);	
+			IR_Pulse(0);
 			
-			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
-			while(Timer_count_6 < 1285);
+			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);
+			while(Timer_count_6 < 1200);
 				
 			help_var = 3;
 			while(i < 28){ // data packet
 				Timer_count_6 = 0;
 				
-				HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);
-				while(Timer_count_6 < 55);	
+				IR_Pulse(1);
+				while(Timer_count_6 < 60);	
+				IR_Pulse(0);
 				
-				HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
+				HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);
 				if(AirData[AirFlag].all & (1 << (i + help_var))){ // littel -> big Endian
-					while(Timer_count_6 < 210);
+					while(Timer_count_6 < 115);
 				}
 				else{
-					while(Timer_count_6 < 110);
+					while(Timer_count_6 < 220);
 				}
 
 				help_var -= 2;
@@ -426,6 +469,15 @@ void Uart_Task(void){
 	}
 }
 
+
+void IR_Pulse(char flag){
+	if(!flag){
+		HAL_TIM_Base_Start_IT(&htim7);
+	}
+	else{
+		HAL_TIM_Base_Stop_IT(&htim7);		
+	}
+}
 /* USER CODE END 4 */
 
 /* USER CODE BEGIN Header_StartDefaultTask */
@@ -466,6 +518,11 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 	if(htim -> Instance == TIM6)
 	 {
 				Timer_count_6++;
+	 }
+	 
+	 if(htim -> Instance == TIM7)
+	 {
+		 	HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
 	 }
   /* USER CODE END Callback 1 */
 }
