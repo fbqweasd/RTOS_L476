@@ -375,7 +375,7 @@ void RTOS_Task1(void){
 
 void Wave_Task(void){	
 	
-	int i, help_var;
+	int i;
 	
 	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
 	while(1){
@@ -391,7 +391,6 @@ void Wave_Task(void){
 			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);
 			while(Timer_count_6 < 1200);
 				
-			help_var = 3;
 			while(i < 28){ // data packet
 				Timer_count_6 = 0;
 				
@@ -400,16 +399,11 @@ void Wave_Task(void){
 				IR_Pulse(0);
 				
 				HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);
-				if(AirData[AirFlag].all & (1 << (i + help_var))){ // littel -> big Endian
+				if(AirData[AirFlag].all & (1 << (27 - i))){ // littel -> big Endian
 					while(Timer_count_6 < 115);
 				}
 				else{
 					while(Timer_count_6 < 220);
-				}
-
-				help_var -= 2;
-				if(help_var < -3){
-					help_var =3;
 				}
 				
 				i++;
